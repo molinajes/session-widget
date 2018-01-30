@@ -5,7 +5,7 @@ An upBoard widget to show Google Analytics Sessions report
 ## Installation
 
 ```
-git clone https://github.com/chesnok9/ga-sessions-widget
+git clone https://github.com/webdevcrazier/session-widget
 cd ga-sessions-widget
 npm install
 ```
