@@ -32511,6 +32511,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+// google script
 ;(function (w, d, s, g, js, fjs) {
   g = w.gapi || (w.gapi = {});
   g.analytics = {
@@ -32528,10 +32529,10 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
   };
 })(window, document, "script");
 
-var CLIENT_ID = "794561760101-j7k0bl1idfbfs8gqd3e40u7gal04nn79.apps.googleusercontent.com";
-var ids = "ga:166794794";
-
+// Buttons to change period titles
 var buttons = ['Day', 'Week', 'Month'];
+
+// Options for a GoogleCharts
 var options = {
   title: 'Sessions',
   titlePosition: 'out',
@@ -32546,7 +32547,9 @@ var options = {
   hAxis: { gridlines: { color: 'transparent' } },
   lineWidth: 2,
   colors: ['#1976D2', '#F57C00', '#388E3C']
-};
+
+  // Legend names and data types for chart
+};var columns = [{ type: 'string', label: 'Day' }, { type: 'number', label: 'Total Users' }, { type: 'number', label: 'Returned Users' }, { type: 'number', label: 'New Users' }];
 
 definejs('GASessionsWidget', function create() {
 
@@ -32568,14 +32571,13 @@ definejs('GASessionsWidget', function create() {
           _this.init = function () {
             var doAuth = function doAuth() {
               gapi.analytics.auth && gapi.analytics.auth.authorize({
-                clientid: CLIENT_ID,
+                clientid: _this.state.client_id,
                 container: _this.authButtonNode
               });
             };
 
             gapi.analytics.ready(function (a) {
               gapi.analytics.auth.on('success', function (response) {
-                console.log(_this.authButtonNode);
                 _this.authButtonNode.style.display = 'none';
                 _this.setState({
                   ready: true
@@ -32588,35 +32590,35 @@ definejs('GASessionsWidget', function create() {
 
           _this.loadAnalytics = function (activeAttr) {
             var self = _this;
-            var dates = ['1daysAgo', '7daysAgo', '30daysAgo'];
-            var sessions = query({
-              'ids': ids,
+            var attr = ['1daysAgo', '7daysAgo', '30daysAgo'];
+            var query1 = query({
+              'ids': _this.state.view_id,
               'dimensions': 'ga:date',
               'metrics': 'ga:sessions',
               'segment': 'gaid::-1',
-              'start-date': dates[activeAttr],
+              'start-date': attr[activeAttr],
               'end-date': 'yesterday'
             });
 
-            var returnedUsers = query({
-              'ids': ids,
+            var query2 = query({
+              'ids': _this.state.view_id,
               'dimensions': 'ga:date',
               'metrics': 'ga:sessions',
               'segment': 'gaid::-3',
-              'start-date': dates[activeAttr],
+              'start-date': attr[activeAttr],
               'end-date': 'yesterday'
             });
 
-            var newUsers = query({
-              'ids': ids,
+            var query3 = query({
+              'ids': _this.state.view_id,
               'dimensions': 'ga:date',
               'metrics': 'ga:sessions',
               'segment': 'gaid::-2',
-              'start-date': dates[activeAttr],
+              'start-date': attr[activeAttr],
               'end-date': 'yesterday'
             });
 
-            Promise.all([sessions, returnedUsers, newUsers]).then(function (results) {
+            Promise.all([query1, query2, query3]).then(function (results) {
 
               var data1 = results[0].rows.map(function (row) {
                 return +row[1];
@@ -32631,12 +32633,9 @@ definejs('GASessionsWidget', function create() {
                 return +row[0];
               });
 
-              console.log('res', results, data1, data2, data3, labels);
               var rows = labels.map(function (value, index) {
-                // console.log('item', value, index)
                 return [(0, _moment2.default)(value, 'YYYYMMDD').format('D MMM'), data1[index], data2[index], data3[index]];
               });
-              console.log('rows', rows);
               self.setState({ rows: rows });
             });
           };
@@ -32646,30 +32645,32 @@ definejs('GASessionsWidget', function create() {
             isEditing: _this.props.mode == 'edit' ? true : false,
             ready: false,
             activeAttr: 0,
-            rows: [['', 0, 0, 0]],
-            columns: [{ type: 'string', label: 'Day' }, { type: 'number', label: 'Total Users' }, { type: 'number', label: 'Returned Users' }, { type: 'number', label: 'New Users' }]
+            client_id: _this.props.clientID, // Google Client ID
+            view_id: 'ga:' + _this.props.viewID, // Google View ID
+            rows: [['', 0, 0, 0]]
           };
           return _this;
         }
 
+        // Handle change period click
+
+
+        // Google account authorization
+
+
+        // Load data from Google Analytics for current active settings
+
+
         _createClass(GASessionsWidget, [{
           key: 'componentDidMount',
           value: function componentDidMount() {
-            console.log('componentDidMount');
             this.init();
-          }
-        }, {
-          key: 'componentDidUpdate',
-          value: function componentDidUpdate() {
-            console.log('componentDidUpdate');
-            // this.loadAnalytics(this.state.activeAttr)
           }
         }, {
           key: 'render',
           value: function render() {
             var _this2 = this;
 
-            console.log('ready', this.state.ready);
             var widgetStyle = {
               textAlign: this.props.widgetStyle.textAlign,
               fontWeight: this.props.widgetStyle.isBold ? 'bold' : 'normal',
@@ -32714,7 +32715,7 @@ definejs('GASessionsWidget', function create() {
                   chartType: 'LineChart'
                   // rows={this.state.rows}
                   , rows: this.state.rows,
-                  columns: this.state.columns,
+                  columns: columns,
                   options: options,
                   width: '100%',
                   legend_toggle: true
@@ -32730,6 +32731,7 @@ definejs('GASessionsWidget', function create() {
   };
 });
 
+// Request for Google Analytics report
 function query(params) {
   return new Promise(function (resolve, reject) {
     var data = new gapi.analytics.report.Data({ query: params });
